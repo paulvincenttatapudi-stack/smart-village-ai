@@ -76,6 +76,36 @@ class Settings(BaseSettings):
     def max_upload_size_bytes(self) -> int:
         return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
+    @property
+    def async_database_url(self) -> str:
+        """DATABASE_URL normalized for SQLAlchemy async engines.
+
+        Accepts the plain schemes that platforms like Railway inject
+        (``postgresql://`` or legacy ``postgres://``) and rewrites them to
+        the asyncpg driver scheme. Other schemes (e.g. ``sqlite+aiosqlite://``)
+        are returned unchanged.
+        """
+        url = self.DATABASE_URL
+        if url.startswith("postgresql://"):
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql+asyncpg://", 1)
+        return url
+
+    @property
+    def sync_database_url(self) -> str:
+        """DATABASE_URL_SYNC normalized for synchronous drivers (Alembic).
+
+        Rewrites async/legacy schemes to the plain ``postgresql://`` scheme
+        used by psycopg2. Other schemes are returned unchanged.
+        """
+        url = self.DATABASE_URL_SYNC
+        if url.startswith("postgresql+asyncpg://"):
+            return url.replace("postgresql+asyncpg://", "postgresql://", 1)
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql://", 1)
+        return url
+
 
 @lru_cache()
 def get_settings() -> Settings:
