@@ -5,7 +5,7 @@ __pycache__/
 .env
 .venv/
 venv/
-models/
+/models/
 static/uploads/*
 !static/uploads/.gitkeep
 *.db
